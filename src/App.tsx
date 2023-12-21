@@ -2,24 +2,23 @@ import './App.css'
 import { Page } from './pages'
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import CssBaseline from '@mui/material/CssBaseline'
+import { CookiesProvider } from 'react-cookie'
 
 function App() {
-
   const theme = createTheme({
     palette: {
       mode: 'dark'
-      // primary: {
-      //   main: "#a34449",
-      //   dark: '#a34449'
-      // },
+      // mode: 'light'
     }
   })
 
   return (
     <>
       <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Page />
+        <CookiesProvider>
+          <CssBaseline />
+          <Page />
+        </CookiesProvider>
       </ThemeProvider>
     </>
   )
