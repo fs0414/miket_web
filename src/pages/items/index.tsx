@@ -1,20 +1,25 @@
 import { useState, useEffect } from 'react';
-import { Box, Button, IconButton, InputLabel, MenuItem, Modal, Select, TextField } from '@mui/material';
+import { Box, Button, InputLabel, MenuItem, Modal, Select, TextField } from '@mui/material';
 import { axiosClient } from '../../lib/axiosClient';
 import { useNavigate } from '@tanstack/react-location';
 import { getUserId } from '../../lib/cookieClient';
 import { CategoryType } from '../../types/category';
 import { ItemType } from '../../types/item';
+import { useAtom } from 'jotai';
+import { maxItemsAtom, totalItemsAtom } from '../../lib/atoms/user';
 
 export const Items = () => {
     const [ categories, setCategories ] = useState<CategoryType[]>([])
 
-    const [ categoryId, setCategoryId ] = useState('')
+    const [ categoryId, setCategoryId ] = useState('0')
 
-    const [itemId, setItemId] = useState<string>('')
+    const [itemId, setItemId] = useState<string>('0')
     const [itemName, setItemName] = useState<string>('')
-    const [itemCategory, setItemCategory] = useState<string>('')
-    const [itemQuantity, setItemQuantity] = useState<number>()
+    const [itemCategory, setItemCategory] = useState<string>('goods')
+    const [itemQuantity, setItemQuantity] = useState<number>(0)
+    
+    const [totalItems, setTotalItems ] = useAtom(totalItemsAtom)
+    const [maxItems, setMaxItems ] = useAtom(maxItemsAtom)
 
     const [ createItemIsOpen, setCreateItemIsOpen ] = useState<boolean>(false)
     const [ updateItemIsOpen, setUpdateItemIsOpen ] = useState<boolean>(false)
@@ -27,7 +32,6 @@ export const Items = () => {
         console.log("not user state")
         navigate({ to: "/signin" })
       }
-      
       fetchCategories()
     }, [])
 
@@ -35,7 +39,9 @@ export const Items = () => {
     const fetchCategories = async() => {
         await axiosClient.get('/categories')
         .then(res => {
-            setCategories(res.data);
+            setCategories(res.data.categories)
+            setTotalItems(res.data.totalItems)
+            setMaxItems(res.data.maxItems)
         })
     }
 
@@ -45,8 +51,13 @@ export const Items = () => {
         return findCategoryId ? findCategoryId.id : null
     }
 
-    const createItemHandler = () => {        
+    const createItemHandler = () => {
         const getCategoryId = findCategoryIdByName(itemCategory)
+
+        if(totalItems >= maxItems) {
+            alert('アイテム数が設定値の上限を超えています')
+            return
+        }
 
         axiosClient.post(`/categories/${getCategoryId}/items`, {
             name: itemName,
@@ -62,10 +73,8 @@ export const Items = () => {
     }
 
     // item更新系
-    const handleItemClick = (itemId: string, categoryName: string) => {
-        console.log({ categoryName })
+    const handleUpdateItemModal = (itemId: string, categoryName: string) => {
         const findCategory = categories.find((category) => category.name === categoryName)
-        console.log({ findCategory })
         if (!findCategory) {
             console.error('Category not found');
             return;
@@ -115,12 +124,12 @@ export const Items = () => {
     }
 
     return (
-        <div className="flex flex-col items-start ml-16 mb-10">
-            <div className="mt-20 mb-16 ml-20">
+        <div className='flex flex-col'>
+            <div className="text-left mt-20 mb-16 ml-32">
                 <Button variant="outlined" onClick={() => setCreateItemIsOpen(true)}>アイテム登録</Button>
             </div>
-            <div className='flex justify-center sm::flex-row'>
-                <div className=''>
+            <div className='flex justify-center pc:flex-row sp:flex-col ml-12'>
+                <div className='flex-1'>
                     {categories.map((category) => {
                         if (category.name == "goods"){
                             return (
@@ -134,7 +143,7 @@ export const Items = () => {
                                                 return (
                                                     <button key={item.id} 
                                                             onClickCapture={() => setUpdateItemIsOpen(true)}
-                                                            onClick={() => handleItemClick(item.id, category.name)}
+                                                            onClick={() => handleUpdateItemModal(item.id, category.name )}
                                                             className='border border-gray-700 shadow-2xl w-60 h-15 m-2 mr-20 ml-5'>
                                                         <div className='flex justify-between m-5'>
                                                             <li className=''>{ item.name }</li>
@@ -151,12 +160,12 @@ export const Items = () => {
                         
                     })}
                 </div>
-                <div className=''>
+                <div className='flex-1'>
                     {categories.map((category) => {
                         if (category.name == "furniture"){
                             return (
                                 <div key={category.id}>
-                                    <div className='mb-5 mr-20'>
+                                    <div className='mb-3 mr-20'>
                                         <h3>家具</h3>
                                     </div>
                                     <div>
@@ -165,7 +174,7 @@ export const Items = () => {
                                                 return (
                                                     <button key={item.id} 
                                                             onClickCapture={() => setUpdateItemIsOpen(true)}
-                                                            onClick={() => handleItemClick(item.id, category.name)}
+                                                            onClick={() => handleUpdateItemModal(item.id, category.name)}
                                                             className='border border-gray-700 shadow-2xl w-60 h-15 m-2 mr-20 ml-5'>
                                                         <div className='flex justify-between m-5'>
                                                             <li className=''>{ item.name }</li>
@@ -182,12 +191,12 @@ export const Items = () => {
                         
                     })}
                 </div>
-                <div className=''>
+                <div className='flex-1'>
                     {categories.map((category) => {
                         if (category.name == "fashion"){
                             return (
                                 <div key={category.id}>
-                                    <div className='mb-5 mr-20'>
+                                    <div className='mb-3 mr-20'>
                                         <h3>衣服</h3>
                                     </div>
                                     <div>
@@ -196,7 +205,7 @@ export const Items = () => {
                                                 return (
                                                     <button key={item.id}
                                                             onClickCapture={() => setUpdateItemIsOpen(true)}
-                                                            onClick={() => handleItemClick(item.id, category.name)} 
+                                                            onClick={() => handleUpdateItemModal(item.id, category.name)} 
                                                             className='border border-gray-700 shadow-2xl w-60 h-15 m-2 mr-20 ml-5'>
                                                         <div className='flex justify-between m-5'>
                                                             <li className=''>{ item.name }</li>
@@ -249,20 +258,30 @@ export const Items = () => {
                                     />
                                 </div>
                                 <div className='mb-5'>
-                                    <InputLabel>カテゴリ</InputLabel>
+                                    {/* <InputLabel>カテゴリ</InputLabel>
                                     <Select
                                         fullWidth
                                         size='small'
                                         labelId="demo-simple-select-label"
                                         id="demo-simple-select"
-                                        onChange={(e) => setItemCategory(e.target.value as string)}
+                                        onChange={(e) => setItemCategory(e.target.value as string || '')}
                                         label="Age"
                                         required
                                     >
                                         <MenuItem value={'goods'}>日用品</MenuItem>
                                         <MenuItem value={'furniture'}>家具</MenuItem>
                                         <MenuItem value={'fashion'}>衣服</MenuItem>
-                                    </Select>
+                                    </Select> */}
+                                    <label className='text-gray-200'>カテゴリ</label>
+                                    <select 
+                                        value={itemCategory} 
+                                        onChange={(e) => setItemCategory(e.target.value as string)}
+                                        className='block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
+                                    >
+                                        <option value={'goods'}>日用品</option>
+                                        <option value={'furniture'}>家具</option>
+                                        <option value={'fashion'}>服装</option>
+                                    </select>
                                 </div>
                                 <div className='mb-5'>
                                     <InputLabel>個数</InputLabel>
@@ -329,7 +348,6 @@ export const Items = () => {
                                         labelId="demo-simple-select-label"
                                         id="demo-simple-select"
                                         value={itemCategory}
-                                        // defaultValue={itemCategory}
                                         onChange={(e) => setItemCategory(e.target.value as string)}
                                         label="Age"
                                         required
@@ -349,7 +367,6 @@ export const Items = () => {
                                             pattern: "[0-9]*"
                                         }}
                                         value={itemQuantity}
-                                        // defaultValue={itemQuantity}
                                         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
                                             setItemQuantity(parseInt(event.target.value));
                                         }}

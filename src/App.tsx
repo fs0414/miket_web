@@ -7,8 +7,8 @@ import { CookiesProvider } from 'react-cookie'
 function App() {
   const theme = createTheme({
     palette: {
-      mode: 'dark'
-      // mode: 'light'
+      // mode: 'dark'
+      mode: 'light'
     }
   })
 

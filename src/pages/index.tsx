@@ -1,7 +1,5 @@
 import { Router, Outlet } from '@tanstack/react-location'
 import { location, routes } from '../routes/router'
-import { Footer } from "../layouts/footer"
-import { Header } from "../layouts/header"
 import { SideBar } from '../layouts/sidebar'
 
 export const Page = () => {
