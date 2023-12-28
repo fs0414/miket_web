@@ -3,14 +3,12 @@ import { Box, Button, InputLabel, MenuItem, Modal, Select, TextField } from '@mu
 import { axiosClient } from '../../lib/axiosClient';
 import { useNavigate } from '@tanstack/react-location';
 import { getUserId } from '../../lib/cookieClient';
-import { CategoryType } from '../../types/category';
 import { ItemType } from '../../types/item';
 import { useAtom } from 'jotai';
-import { maxItemsAtom, totalItemsAtom } from '../../lib/atoms/user';
+import { categoriesAtom, maxItemsAtom, totalItemsAtom } from '../../lib/atoms/user';
 
 export const Items = () => {
-    const [ categories, setCategories ] = useState<CategoryType[]>([])
-
+    const [ categories, setCategories ] = useAtom(categoriesAtom)
     const [ categoryId, setCategoryId ] = useState('0')
 
     const [itemId, setItemId] = useState<string>('0')
