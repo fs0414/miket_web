@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Box, Button, InputLabel, MenuItem, Modal, Select, TextField } from '@mui/material';
+import { Button, Modal} from '@mui/material';
 import { axiosClient } from '../../lib/axiosClient';
 import { useNavigate } from '@tanstack/react-location';
 import { getUserId } from '../../lib/cookieClient';
 import { ItemType } from '../../types/item';
 import { useAtom } from 'jotai';
 import { categoriesAtom, maxItemsAtom, totalItemsAtom } from '../../lib/atoms/user';
+import { ItemCreateModal } from './itemCreateModal';
+import { ItemUpdateModal } from './ItemUpdateModal';
 
 export const Items = () => {
     const [ categories, setCategories ] = useAtom(categoriesAtom)
@@ -13,7 +15,7 @@ export const Items = () => {
 
     const [itemId, setItemId] = useState<string>('0')
     const [itemName, setItemName] = useState<string>('')
-    const [itemCategory, setItemCategory] = useState<string>('goods')
+    const [categoryOfItem, setCategoryOfItem] = useState<string>('goods')
     const [itemQuantity, setItemQuantity] = useState<number>(0)
     
     const [totalItems, setTotalItems ] = useAtom(totalItemsAtom)
@@ -44,13 +46,13 @@ export const Items = () => {
     }
 
     // item登録系
-    const findCategoryIdByName = (itemCategory: string) => {
+    const findCategoryIdByName = (itemCategory: string): string | null => {
         const findCategoryId = categories.find(category => category.name === itemCategory)
         return findCategoryId ? findCategoryId.id : null
     }
 
-    const createItemHandler = () => {
-        const getCategoryId = findCategoryIdByName(itemCategory)
+    const createItemHandler = (): void => {
+        const getCategoryId = findCategoryIdByName(categoryOfItem)
 
         if(totalItems >= maxItems) {
             alert('アイテム数が設定値の上限を超えています')
@@ -89,13 +91,13 @@ export const Items = () => {
         setCategoryId(findCategory.id)
         setItemId(findItem.id)
         // 更新モーダルのplaceholderに使用
-        setItemCategory(findCategory.name)
+        setCategoryOfItem(findCategory.name)
         setItemName(findItem.name)
         setItemQuantity(findItem.quantity)
     }
 
     const updateItemHandler = async() => {
-        const getCategoryId = findCategoryIdByName(itemCategory)
+        const getCategoryId = findCategoryIdByName(categoryOfItem)
         await axiosClient.put(`categories/${categoryId}/items/${itemId}`, {
             name: itemName,
             quantity: itemQuantity,
@@ -228,79 +230,13 @@ export const Items = () => {
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
             >
-                <Box sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        height: 400,
-                        width: 400,
-                        bgcolor: 'background.paper',
-                        boxShadow: 24,
-                        p: 4
-                    }}>
-                    <div>
-                        <div>
-                            <h3>アイテム登録</h3>
-                        </div>
-                        <div>
-                            <Box component="form">
-                                <div className='mt-5 mb-5'>
-                                    <InputLabel>アイテム名</InputLabel>
-                                    <TextField
-                                        fullWidth
-                                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                            setItemName(event.target.value as string);
-                                        }}
-                                        required
-                                    />
-                                </div>
-                                <div className='mb-5'>
-                                    {/* <InputLabel>カテゴリ</InputLabel>
-                                    <Select
-                                        fullWidth
-                                        size='small'
-                                        labelId="demo-simple-select-label"
-                                        id="demo-simple-select"
-                                        onChange={(e) => setItemCategory(e.target.value as string || '')}
-                                        label="Age"
-                                        required
-                                    >
-                                        <MenuItem value={'goods'}>日用品</MenuItem>
-                                        <MenuItem value={'furniture'}>家具</MenuItem>
-                                        <MenuItem value={'fashion'}>衣服</MenuItem>
-                                    </Select> */}
-                                    <label className='text-gray-200'>カテゴリ</label>
-                                    <select 
-                                        value={itemCategory} 
-                                        onChange={(e) => setItemCategory(e.target.value as string)}
-                                        className='block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
-                                    >
-                                        <option value={'goods'}>日用品</option>
-                                        <option value={'furniture'}>家具</option>
-                                        <option value={'fashion'}>服装</option>
-                                    </select>
-                                </div>
-                                <div className='mb-5'>
-                                    <InputLabel>個数</InputLabel>
-                                    <TextField
-                                        size='small'
-                                        type="number"
-                                        inputProps={{
-                                            inputMode: "numeric",
-                                            pattern: "[0-9]*"
-                                        }}
-                                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                            setItemQuantity(parseInt(event.target.value));
-                                        }}
-                                        required
-                                    />
-                                </div>
-                                <Button variant="outlined" onClick={createItemHandler}>Outlined</Button>
-                            </Box>
-                        </div>
-                    </div>
-                </Box>
+                <ItemCreateModal 
+                    setItemName={setItemName}
+                    createItemHandler={createItemHandler}
+                    categoryOfItem={categoryOfItem}
+                    setCategoryOfItem={setCategoryOfItem}
+                    setItemQuantity={setItemQuantity}
+                />
             </Modal>
 
             {/* 更新用モーダル */}
@@ -310,79 +246,16 @@ export const Items = () => {
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
             >
-                <Box sx={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        height: 400,
-                        width: 400,
-                        bgcolor: 'background.paper',
-                        boxShadow: 24,
-                        p: 4
-                    }}>
-                    <div>
-                        <div>
-                            <h3>アイテム更新</h3>
-                        </div>
-                        <div>
-                            <Box component="form">
-                                <div className='mt-5 mb-5'>
-                                    <InputLabel>アイテム名</InputLabel>
-                                    <TextField
-                                        fullWidth
-                                        value={itemName}
-                                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                            setItemName(event.target.value as string);
-                                        }}
-                                        required
-                                    />
-                                </div>
-                                <div className='mb-5'>
-                                    <InputLabel>カテゴリ</InputLabel>
-                                    <Select
-                                        fullWidth
-                                        size='small'
-                                        labelId="demo-simple-select-label"
-                                        id="demo-simple-select"
-                                        value={itemCategory}
-                                        onChange={(e) => setItemCategory(e.target.value as string)}
-                                        label="Age"
-                                        required
-                                    >
-                                        <MenuItem value={'goods'}>日用品</MenuItem>
-                                        <MenuItem value={'furniture'}>家具</MenuItem>
-                                        <MenuItem value={'fashion'}>衣服</MenuItem>
-                                    </Select>
-                                </div>
-                                <div className='mb-5'>
-                                    <InputLabel>個数</InputLabel>
-                                    <TextField
-                                        size='small'
-                                        type="number"
-                                        inputProps={{
-                                            inputMode: "numeric",
-                                            pattern: "[0-9]*"
-                                        }}
-                                        value={itemQuantity}
-                                        onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                            setItemQuantity(parseInt(event.target.value));
-                                        }}
-                                        required
-                                    />
-                                </div>
-                                <div className='flex flex-row'>
-                                    <div className='mr-5'>
-                                        <Button variant="outlined" onClick={updateItemHandler}>更新</Button>
-                                    </div>
-                                    <div>
-                                        <Button variant="outlined" color="error" onClick={deleteItemHandler}>削除</Button>
-                                    </div>
-                                </div>
-                            </Box>
-                        </div>
-                    </div>
-                </Box>
+                <ItemUpdateModal
+                    itemName={itemName}
+                    setItemName={setItemName}
+                    categoryOfItem={categoryOfItem}
+                    setCategoryOfItem={setCategoryOfItem}
+                    itemQuantity={itemQuantity}
+                    setItemQuantity={setItemQuantity}
+                    updateItemHandler={updateItemHandler}
+                    deleteItemHandler={deleteItemHandler}
+                />
             </Modal>
         </div>
     )

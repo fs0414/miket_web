@@ -19,3 +19,10 @@ axiosClient.interceptors.request.use((config) => {
     config.headers["Authorization"] =`Bearer ${getToken()}`
     return config;
 })
+
+axiosClient.interceptors.response.use(
+    res => res,
+    err => {
+        console.log(err)
+    }
+)
